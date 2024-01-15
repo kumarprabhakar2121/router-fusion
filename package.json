@@ -1,6 +1,6 @@
 {
     "name": "router-fusion",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Include all the router files and add it in the app router without doing it manually by importing all the router files..",
     "main": "index.js",
     "scripts": {},
@@ -9,7 +9,21 @@
         "router",
         "routes",
         "route",
-        "getroute"
+        "getroute",
+        "express",
+        "express.js",
+        "route integration",
+        "auto router",
+        "fusion",
+        "dynamic routes",
+        "JavaScript",
+        "TypeScript",
+        "npm package",
+        "middleware",
+        "web development",
+        "API development",
+        "route management",
+        "automation"
     ],
     "repository": {
         "type": "git",
@@ -21,8 +35,18 @@
         "url": "https://github.com/kumarprabhakar2121/router-fusion/issues"
     },
     "homepage": "https://github.com/kumarprabhakar2121/router-fusion#readme",
+    "exports": {
+        ".": {
+            "node": {
+                "module": "./index.mjs",
+                "require": "./index.js",
+                "import": "./wrapper.mjs"
+            }
+        },
+        "./package.json": "./package.json"
+    },
+    "module": "./index.mjs",
     "dependencies": {
-        "express-routes-extractor": "^1.0.1"
+        "express-routes-extractor": "^1.2.6"
     }
 }
-
