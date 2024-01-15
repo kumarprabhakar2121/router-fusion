@@ -1,6 +1,6 @@
 {
     "name": "router-fusion",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "description": "Include all the router files and add it in the app router without doing it manually by importing all the router files..",
     "main": "index.js",
     "scripts": {},

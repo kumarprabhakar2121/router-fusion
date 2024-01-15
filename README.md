@@ -2,6 +2,17 @@
 
 Dynamically fuses routes from JavaScript and TypeScript files into an Express application.
 
+Express Fusion simplifies Express.js development by automating route integration. This tool dynamically fuses routes from JavaScript and TypeScript files, eliminating the need for manual imports. Tailor integration effortlessly with optional parameters like exclusion filters and project paths. Explore the experimental "/help" route for insightful JSON-based API endpoint references. Ideal for boosting productivity and maintaining a clean codebase, Express Fusion is the go-to solution for a seamless Express.js development experience. Say goodbye to manual route imports.
+
+## Key Features:
+
+- **Dynamic Integration:** Automatically fuse routes from your JavaScript and TypeScript files into your Express application. Say goodbye to tedious manual imports!
+
+- **Effortless Configuration:** Customize route fusion with ease using optional parameters such as exclusion filters and project paths. Tailor the integration to fit your project's unique structure effortlessly.
+
+- **Experimental "/help" Route:** Gain unprecedented visibility into your integrated routes with the experimental "/help" route. Visualize your endpoints in a JSON format, providing developers with a quick reference guide. Please note: while this feature is incredibly powerful, it's currently experimental and may not be compatible with certain global authentication middleware setups.
+
+
 ## Installation
 
 ```bash
