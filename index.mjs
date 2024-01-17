@@ -20,7 +20,7 @@ const DEFAULT_EXCLUDE_FOLDERS = ["node_modules", ".git"];
  */
 async function fuseRoutes({ app, excludeFilter = '', projectPath, helpRoute = false }) {
     try {
-        if(!app || !projectPath){
+        if (!app || !projectPath) {
             console.error('"app" and "projectPath" are required fields for method "fuseRoutes"');
         }
         // Filter files and folders based on the excludeFilter
@@ -31,29 +31,31 @@ async function fuseRoutes({ app, excludeFilter = '', projectPath, helpRoute = fa
         const files = await getAllJsTsFiles(projectPath, allExcludedFolders, exFiles);
         // Iterate over files and add Express routers to the app
         for (const file of files) {
+            let routerModule;
             try {
-                let routerModule;
-                try {
-                    routerModule = await import(file);
-                } catch (error) {
-                    /* not an ESM module, skipping this */
+                // Dynamically import the module
+                routerModule = await import(file);
+
+                // Handling routerModule itself
+                if (routerModule) {
+                    handleExpressRouter(app, routerModule);
                 }
-                const defaultModule = routerModule?.default;
-                if (routerModule && isExpressRouter(defaultModule)) {
-                    try {
-                        app.use(defaultModule);
-                    } catch (error) {
-                        console.error(error);
-                    }
-                } else if (isExpressRouter(routerModule)) {
-                    try {
-                        app.use(routerModule);
-                    } catch (error) {
-                        console.error(error);
-                    }
+
+                // Handling default export
+                const defaultExport = routerModule?.default;
+                if (defaultExport) {
+                    handleExpressRouter(app, defaultExport);
                 }
-            } catch (importError) {
-                console.error(`Error importing router from file ${file}:`, importError);
+
+                // Handling named export 'router'
+                const namedRouter = routerModule?.router;
+                if (namedRouter) {
+                    handleExpressRouter(app, namedRouter);
+                }
+
+            } catch (error) {
+                // Log an error if the module is not a CommonJS module
+                /* not es6 module */
             }
         }
         if (helpRoute) {
@@ -70,6 +72,53 @@ async function fuseRoutes({ app, excludeFilter = '', projectPath, helpRoute = fa
          */
         console.error("Error fusing routes to application:", error);
         throw error;
+    }
+}
+
+/**
+ * Handles the integration of Express routers into the application.
+ *
+ * @param {object} app - The Express application.
+ * @param {*} routerModule - The module containing Express router(s) to be integrated.
+ */
+function handleExpressRouter(app, routerModule) {
+    /**
+     * Checks if the given module has any routes.
+     *
+     * @param {*} module - The module to check.
+     * @returns {boolean} True if the module has routes, false otherwise.
+     */
+    const haveAnyRoutes = isExpressRouter(routerModule);
+
+    if (haveAnyRoutes && typeof routerModule === 'function' && routerModule.hasOwnProperty('use') && routerModule.hasOwnProperty('handle')) {
+        // Most probably the place where the Express application is initialized
+    } else if (haveAnyRoutes && routerModule && typeof routerModule === 'function' && routerModule.hasOwnProperty('stack')) {
+        /**
+         * Adds the Express router to the application.
+         *
+         * @throws {Error} Throws an error if there's an issue adding the router.
+         */
+        app.use(routerModule);
+    } else if (typeof routerModule === 'object') {
+        // If the module is an object, iterate over its properties
+        for (const key in routerModule) {
+            const element = routerModule[key];
+            // Check if the property is a valid Express router
+            if (typeof element === 'function' && element.hasOwnProperty('stack')) {
+                if (isExpressRouter(element)) {
+                    try {
+                        /**
+                         * Adds the Express router to the application.
+                         *
+                         * @throws {Error} Throws an error if there's an issue adding the router.
+                         */
+                        app.use(element);
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }
+            }
+        }
     }
 }
 

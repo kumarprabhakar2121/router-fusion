@@ -34,41 +34,27 @@ async function fuseRoutes({ app, excludeFilter = '', projectPath, helpRoute = fa
         for (const file of files) {
             let routerModule;
             try {
+                // Dynamically import the module
                 routerModule = require(file);
-                for (const key in routerModule) {
-                    const element = routerModule[key];
-                    if (isExpressRouter(element)) {
-                        try {
-                            app.use(element);
-                        } catch (error) {
-                            console.error(error);
-                        }
-                    } else if (isExpressRouter(element?.default)) {
-                        try {
-                            app.use(element?.default);
-                        } catch (error) {
-                            console.error(error);
-                        }
-                    }
+                if (routerModule) {
+                    handleExpressRouter(app, routerModule);
                 }
             } catch (error) {
+                // Log an error if the module is not a CommonJS module
                 /* not cjs module */
             }
-            if (routerModule && isExpressRouter(routerModule)) {
-                try {
-                    app.use(routerModule);
-                } catch (error) {
-                    console.error(error);
-                }
-            }
         }
+
+        // Add a help route if specified
         if (helpRoute) {
             app.use("/help", function (req, res) {
+                // Extract and return the existing Express routes
                 const paths = extractExpressRoutes(app);
                 res.json(paths);
             });
         }
     } catch (error) {
+        // Handle errors during route fusion
         /**
          * Throws an error if there's an issue reading directories or fusing routes.
          *
@@ -76,6 +62,47 @@ async function fuseRoutes({ app, excludeFilter = '', projectPath, helpRoute = fa
          */
         console.error("Error fusing routes to application:", error);
         throw error;
+    }
+}
+
+/**
+ * Handles the integration of Express routers into the application.
+ *
+ * @param {object} app - The Express application.
+ * @param {*} routerModule - The module containing Express router(s) to be integrated.
+ */
+function handleExpressRouter(app, routerModule) {
+    /**
+     * Checks if the given module has any routes.
+     *
+     * @param {*} module - The module to check.
+     * @returns {boolean} True if the module has routes, false otherwise.
+     */
+    const haveAnyRoutes = isExpressRouter(routerModule);
+
+    // Check if the module has routes and is a valid Express router
+    // check and add logic
+    if (haveAnyRoutes && typeof routerModule === 'function' && routerModule.hasOwnProperty('use') && routerModule.hasOwnProperty('handle')) {
+        // Most probably the place where express application is initialized
+    } else if (haveAnyRoutes && routerModule && typeof routerModule === 'function' && routerModule.hasOwnProperty('stack')) {
+        // Add the Express router to the app
+        app.use(routerModule);
+    } else if (typeof routerModule === 'object') {
+        // If the module is an object, iterate over its properties
+        for (const key in routerModule) {
+            const element = routerModule[key];
+            // Check if the property is a valid Express router
+            if (typeof element === 'function' && element.hasOwnProperty('stack')) {
+                if (isExpressRouter(element)) {
+                    try {
+                        // Add the Express router to the app
+                        app.use(element);
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }
+            }
+        }
     }
 }
 
